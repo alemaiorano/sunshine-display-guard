@@ -58,7 +58,9 @@ class Display:
         if not layout:
             raise ValueError('Refusing to disable every monitor')
         options = {}
-        if "layout-mode" in self.options:
+        # XRandR reports its current mode but rejects any attempt to set it.
+        # Mutter defines an absent capability as false, including older backends.
+        if self.options.get("supports-changing-layout-mode") and "layout-mode" in self.options:
             options["layout-mode"] = GLib.Variant("u", self.options["layout-mode"])
         self.call("ApplyMonitorsConfig", GLib.Variant(
             "(uua(iiduba(ssa{sv}))a{sv})", (self.serial, 1, layout, options),

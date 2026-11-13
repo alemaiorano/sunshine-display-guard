@@ -95,10 +95,79 @@ break session ownership or restoration, but may affect perceived smoothness.
 This validates the shared session/backport behavior in an operational profile.
 It does **not** mean the entire generalized public controller was activated and
 hardware-certified. The generalized observer installer has its separate real
-install/upgrade smoke evidence; the full generic policy still needs its own
-end-to-end campaign. No human observation of physical panel power or login is
+install/upgrade smoke evidence; the isolated generic-policy campaign below supplies separate end-to-end
+evidence for its stated environment. No human observation of physical panel power or login is
 claimed. Deployment inventories, raw logs, connection data and full evidence
 remain outside this public repository; only the de-identified summary is included.
+
+## Isolated generic-controller end-to-end follow-up
+
+A separate campaign on 13 November 2026 exercised the public controller itself,
+including its configuration, installer, observer, active user policy, capture
+synchronization/API restart, generated application hooks and client launcher.
+The host was a disposable KVM/QEMU guest with Ubuntu 24.04, GNOME/Mutter 46.2 on
+X11, a virtio GPU with three guest DRM connectors and Sunshine
+2026.914.233613 using X11 capture and software H.264 encoding. A reserve mode
+for each tested orientation was provisioned before testing.
+
+Moonlight 6.2.0 ran with fresh pairing/settings in a separate headless
+GNOME/Mutter 50.1 session, using its own session bus, runtime directory and
+Xwayland display. Its portrait and landscape screens were **virtual test
+screens**, not the user's physical panels. Both display authorities were
+separate from the operational compositor; no second policy was started against
+that compositor. This is real video streaming/decoding on isolated graphics
+sessions, not human observation of physical panels or a hardware-performance
+certification.
+
+The initial public code failed a real X11 layout apply with `Can't set layout
+mode`: it sent `layout-mode` merely because Mutter reported the current value.
+Mutter's separate `supports-changing-layout-mode` capability must permit that
+property. The correction omits it on fixed-layout backends while preserving the
+reported mode for normalization. A new regression fails on the earlier implementation and passes with the
+correction; a second test covers changeable backends. The complete suite passes
+183 tests.
+See the [Mutter interface contract](https://github.com/GNOME/mutter/blob/46.2/data/dbus-interfaces/org.gnome.Mutter.DisplayConfig.xml).
+
+All nine installed controller modules matched the corrected public source byte
+for byte. Four complete streams then passed:
+
+| Case | Stream requested | Decoded / rendered FPS | Healthy checkpoint since prepare | Restoration after client exit |
+| --- | --- | --- | --- | --- |
+| Portrait, initial | 1080×1920 at 30 FPS | 30.27 / 30.13 | 14.64 s | 0.21 s |
+| Portrait, reconnect with journal EOF | 1080×1920 at 30 FPS | 30.09 / 30.04 | 54.05 s | 21.19 s |
+| Landscape, initial | 2560×1080 at 30 FPS | 30.34 / 30.11 | 13.32 s | 0.21 s |
+| Landscape, reconnect with journal EOF | 2560×1080 at 30 FPS | 30.08 / 30.03 | 55.00 s | 20.47 s |
+
+Window dimensions and bounds matched the selected isolated screen. Each case
+restored the exact prior reserve layout and mode. On both EOF cases, only the
+owned journal child was terminated; the same watcher process and token retained
+the live video lease beyond the initial grace period. Packet timestamps and
+actual decoder/render statistics supplied separate evidence. The approximately
+21-second EOF cleanup is the bounded packet-health timeout, not an immediate
+log-based disconnect. These short, 30-FPS software-encoding sessions are not
+60-FPS, ultrawide-refresh or throughput benchmarks.
+
+Additional real guest checks passed:
+
+- First installation, corrected-release upgrade and readiness attestation with
+  healthy input coverage and matching observer source/video port.
+- An attempted installation during an active stream was refused before replacing
+  the observer; its PID/instance and the active session token remained unchanged.
+- Standby selected the reserve and reconciled Sunshine capture. QEMU input events
+  delivered through guest PCI input devices advanced the observer's physical-input
+  timestamp and restored the confirmed single-monitor, mirrored and extended
+  layouts. Tests did not write synthetic timestamps into the observer JSON.
+- Simulated disconnection of both physical-role guest DRM outputs left only the
+  reserve available and usable. The fixture explicitly refreshed XRandR after
+  changing guest connector status; this does not certify real cable hotplug or
+  physical monitor power-button behavior.
+
+Protected operational service identities, configuration hashes and compositor
+layout were checked throughout the isolated streaming campaign. No operational
+service, pairing profile or display layout was replaced by this test. Test-owned
+clients, compositor and guest were closed afterward. Detailed evidence and local
+fixtures remain outside the public repository; only this de-identified summary
+is published.
 
 ## Remaining verification
 

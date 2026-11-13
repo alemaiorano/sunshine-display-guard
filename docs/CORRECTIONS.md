@@ -6,6 +6,7 @@ belong in local configuration; deployment-specific values are not published.
 
 | Failure class | Included correction | Regression evidence |
 | --- | --- | --- |
+| Fixed-layout Mutter backend rejects otherwise valid topology | Send `layout-mode` only when `supports-changing-layout-mode` is advertised; retain current mode for normalization. | `test_display_contract.py`; real isolated GNOME/X11 end-to-end campaign in [validation](VALIDATION.md#isolated-generic-controller-end-to-end-follow-up) |
 | Mirror group mistaken for an exclusive reserve | Exclusivity requires one logical group with one member; preserve remaining mirror members and newer manual layouts. | `test_sunshine_regressions.py`, `test_sunshine_layout.py` |
 | Session ownership checked outside the mutation transaction | Policy, hooks, asynchronous primary sync and restart retries share a reentrant lock. Active lease/video defers sync before writes; one retry timer preserves forced refresh. | `test_sunshine_regressions.py`, `test_sunshine_observer_update.py` |
 | Live watcher PID keeps a stale session indefinitely | Video progress is independent of PID/logging; process identity and bounded grace control recovery. | `test_sunshine_regressions.py` |
