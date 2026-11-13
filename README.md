@@ -67,7 +67,9 @@ are not certified. Input entirely inside an observer outage can be missed.
 
 The first release is an experimental source release. Automated model/service
 boundary tests are distinct from hardware testing; see
-[validation](docs/VALIDATION.md). No GitHub Actions workflows are enabled by this
+[validation](docs/VALIDATION.md) and the [included corrections](docs/CORRECTIONS.md).
+The validation page includes real portrait/ultrawide reconnect and journal-EOF
+results, with their scope and network-quality limits. No GitHub Actions workflows are enabled by this
 project. Maintainers run the local checks before committing and publishing.
 
 ## Local checks

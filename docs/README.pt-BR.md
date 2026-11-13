@@ -20,3 +20,11 @@ não há framebuffer capturável. Boot/login presencial, suspensão e todas as
 combinações de hardware não foram certificados.
 
 Licença MIT. O projeto é independente do Sunshine e do Moonlight.
+
+
+As [correções incluídas](CORRECTIONS.md) e a [validação](VALIDATION.md#real-session-follow-up)
+estão documentadas separadamente. O núcleo recebeu validação em quatro sessões
+reais, com retrato, horizontal, reconexão e journal filho encerrado. A restauração
+foi automática; houve jitter/perda de quadros medidos. Isso não certifica o
+controlador genérico inteiro nem todos os hardwares. Logs brutos e dados dos
+ambientes usados na validação não são publicados.
