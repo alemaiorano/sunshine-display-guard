@@ -1,0 +1,16 @@
+{
+  "reserve_connector": null,
+  "sunshine_unit": "sunshine.service",
+  "sunshine_scope": "user",
+  "sunshine_config": "~/.config/sunshine/sunshine.conf",
+  "follow_primary": false,
+  "restart_credentials": null,
+  "api_port": 47990,
+  "video_port": 47998,
+  "moonlight_binary": "moonlight",
+  "moonlight_host": "stream-host.example",
+  "moonlight_app": "Desktop (Display Guard)",
+  "moonlight_fps": 60,
+  "moonlight_bitrate": 20000,
+  "resolution_fps_limits": {}
+}

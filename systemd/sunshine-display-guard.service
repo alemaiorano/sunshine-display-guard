@@ -1,0 +1,15 @@
+[Unit]
+Description=GNOME display policy for Sunshine
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/python3 /usr/local/lib/sunshine-display-guard/current/diagnose.py --require-ready
+ExecStart=/usr/bin/python3 /usr/local/lib/sunshine-display-guard/current/sunshine-desktop-policy.py
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONDONTWRITEBYTECODE=1
+
+[Install]
+WantedBy=graphical-session.target

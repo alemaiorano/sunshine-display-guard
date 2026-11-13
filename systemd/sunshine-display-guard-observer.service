@@ -1,0 +1,32 @@
+[Unit]
+Description=Timestamp observer for physical input and Sunshine video activity
+After=systemd-udevd.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /usr/local/lib/sunshine-display-guard/current/sunshine_observer.py
+Restart=on-failure
+RestartSec=2
+KillMode=control-group
+RuntimeDirectory=sunshine-display-guard
+RuntimeDirectoryMode=0755
+UMask=0022
+Environment=PYTHONDONTWRITEBYTECODE=1
+EnvironmentFile=-/etc/sunshine-display-guard/observer.env
+NoNewPrivileges=yes
+CapabilityBoundingSet=CAP_NET_RAW CAP_SETUID CAP_SETGID CAP_KILL
+AmbientCapabilities=CAP_NET_RAW CAP_SETUID CAP_SETGID CAP_KILL
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+PrivateTmp=yes
+RestrictAddressFamilies=AF_PACKET AF_INET AF_INET6 AF_UNIX AF_NETLINK
+ReadWritePaths=/run/sunshine-display-guard
+DevicePolicy=closed
+DeviceAllow=char-input r
+
+[Install]
+WantedBy=multi-user.target
