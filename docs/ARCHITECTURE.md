@@ -44,3 +44,11 @@ Journal selection respects user versus system service scope and uses the trusted
 application invocation field. It does not require the newer --invocation option.
 See [journalctl](https://www.freedesktop.org/software/systemd/man/latest/journalctl.html)
 and [journal fields](https://www.freedesktop.org/software/systemd/man/latest/systemd.journal-fields.html).
+
+The optional exclusive-reserve app uses the same lock and watcher with a
+`prepare-remote` entry point. It checks configured-scope journal and fresh,
+source/port-matching observer data before recovery/mutation, snapshots the full
+layout, selects only the reserve and confirms the result. Its lease includes
+rollback and an explicit boolean mode marker. Default prep does not force this
+transition. Capture-backend reenumeration remains an upstream prerequisite;
+see [exclusive reserve](EXCLUSIVE-RESERVE.md).

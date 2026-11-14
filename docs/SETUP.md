@@ -125,6 +125,21 @@ The entry runs `prepare` followed by the session watcher. Restore is tied to the
 watcher's ownership token, not an unscoped old undo hook. Do not manually attach
 an undo command that could restore a newer session's lease.
 
+### Optional: a virtual screen even with two physical monitors
+
+For exclusive remote use, create a second app with `--exclusive-reserve`:
+
+```sh
+/usr/bin/python3 scripts/app_hooks.py --name 'Remote Desktop (Virtual)' --exclusive-reserve
+/usr/bin/python3 scripts/app_hooks.py --name 'Remote Desktop (Virtual)' --exclusive-reserve --apply
+```
+
+This temporarily selects only `reserve_connector`, adjusts its mode to the client,
+and restores the previous layout on exit. Physical outputs leave the desktop
+while it runs; existing apps/default behavior are unchanged. Select the new app
+in Moonlight. Read [exclusive reserve](EXCLUSIVE-RESERVE.md) for capture/backend
+requirements, conflict refusal, standby recovery and phone input settings.
+
 ## 6. Verify and enable
 
 ```sh

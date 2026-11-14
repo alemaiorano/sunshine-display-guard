@@ -142,3 +142,20 @@ class JournalScopeTests(unittest.TestCase):
         self.assertEqual(config.journal_args('stream.service','user','fixture'),['--user-unit','stream.service','_SYSTEMD_INVOCATION_ID=fixture'])
         self.assertEqual(config.journal_args('stream.service','system','fixture'),['--unit','stream.service','_SYSTEMD_INVOCATION_ID=fixture'])
         self.assertFalse(any(x.startswith('--invocation') for x in config.journal_args('stream.service','user','fixture')))
+
+class ExclusiveAppHookTests(unittest.TestCase):
+    setUp=AppHookTests.setUp
+    def test_exclusive_preview_is_explicit_and_does_not_write(self):
+        before=self.path.read_bytes()
+        result=app_hooks.update(self.path,'Remote',exclusive_reserve=True)
+        self.assertTrue(result['app']['prep-cmd'][0]['do'].endswith(' prepare-remote'))
+        self.assertFalse(result['writes_files']);self.assertEqual(before,self.path.read_bytes())
+        self.assertTrue(app_hooks.application('Default')['prep-cmd'][0]['do'].endswith(' prepare'))
+
+    def test_exclusive_apply_keeps_existing_apps_and_backup(self):
+        before=self.path.read_bytes()
+        result=app_hooks.update(self.path,'Remote',True,exclusive_reserve=True)
+        data=json.loads(self.path.read_text())
+        self.assertEqual(data['apps'][0],{'name':'Existing','cmd':'preserve'})
+        self.assertTrue(data['apps'][1]['prep-cmd'][0]['do'].endswith(' prepare-remote'))
+        self.assertEqual(Path(result['backup']).read_bytes(),before)

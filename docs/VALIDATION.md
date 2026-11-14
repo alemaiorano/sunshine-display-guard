@@ -169,6 +169,31 @@ clients, compositor and guest were closed afterward. Detailed evidence and local
 fixtures remain outside the public repository; only this de-identified summary
 is published.
 
+## Optional exclusive-reserve profile
+
+The new app option has separate regression coverage for two-screen extension,
+mirrors (including a reserve member), a single physical output, reserve-only,
+missing reserve, invalid client dimensions, write-before-mutation rollback,
+failed activation confirmation, later manual layouts and conflict refusal.
+Nondefault video ports, user/system journal scope, observer source/schema mismatch,
+and journal warnings with successful exit status are exercised. App previews do
+not write; applying the flag creates a separate entry and preserves existing
+applications/backups. The default profile remains covered by the original tests.
+
+An operational counterpart was exercised from an extended two-monitor layout:
+landscape and portrait prepare/restore cycles returned to the original physical
+arrangement. A mobile user confirmed usable image and pointer control on the sole
+virtual screen, and subsequent return to the physical layout was observed. These
+are de-identified observations for the shared topology behavior, not a claim that
+the newly generalized flag has its own complete hardware/backend campaign. No
+operational inventory, credentials, pairing or raw logs are published.
+
+The public port is validated at its real serialization, configuration and service
+boundaries using fixtures. A new physical-output campaign for the generalized
+exclusive flag was not run against an operational compositor. It remains an
+experimental, explicit app profile; verify capture fallback and phone input on
+your installation. See [usage and limits](EXCLUSIVE-RESERVE.md).
+
 ## Remaining verification
 
 No end-to-end claim is made for boot/GDM, suspend/resume, physical power-button

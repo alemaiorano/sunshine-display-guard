@@ -15,7 +15,8 @@ size and orientation.
 - Switches to an **already-provisioned, DRM-backed** reserve output when physical displays
   enter power saving; physical input requests a verified return to the saved layout.
 - Adapts an exclusive reserve output to a Moonlight session, without treating a
-  mirror group as a single physical monitor.
+  mirror group as a single physical monitor. An [optional exclusive profile](docs/EXCLUSIVE-RESERVE.md)
+  selects the reserve even with physical monitors connected, restoring the prior layout on exit.
 - Serializes display/capture changes with session ownership, including asynchronous
   callbacks and retries. Managed active streams veto topology changes.
 - Separates video progress, process identity, logging progress and input coverage.

@@ -17,7 +17,7 @@ import threading
 from gi.repository import Gio, GLib
 from guard_config import SETTINGS, runtime_dir, init_paths, require_host, journal_args
 from sunshine_layout import atomic_json, choose_mode, normalize_layout, exclusive_output
-from sunshine_observer import video_health, read_snapshot as read_activity, VIDEO_SECONDS
+from sunshine_observer import video_health, read_snapshot as read_activity, VIDEO_SECONDS, source_hash as observer_source_hash
 
 NAME = "org.gnome.Mutter.DisplayConfig"
 PATH = "/org/gnome/Mutter/DisplayConfig"
@@ -200,6 +200,9 @@ def valid_lease(value):
         if not all(isinstance(value.get(k), str) and 0 < len(value[k]) <= 256
                    for k in ('previous', 'target', 'connector')):
             return False
+    if 'remote_exclusive' in value and (not isinstance(value['remote_exclusive'], bool) or
+            (value['remote_exclusive'] and not all(k in value for k in ('previous_layout', 'previous', 'target', 'connector')))):
+        return False
     if 'previous_layout' in value and not isinstance(value['previous_layout'], list):
         return False
     return True
@@ -221,35 +224,88 @@ def read_lease():
         return None
 
 
-def prepare():
+def require_remote_idle(invocation):
+    """An unmanaged stream must not lose its displays to a new remote profile."""
+    activity = read_activity()
+    if activity is None:
+        raise RuntimeError('Observer unavailable; remote topology change refused')
+    if (activity.get('schema') != 2 or activity.get('video_port') != SETTINGS.video_port or
+            activity.get('source_sha256') != observer_source_hash()):
+        raise RuntimeError('Observer source/schema/video port mismatch; remote mode refused')
+    if activity['video_at'] and time.monotonic() - activity['video_at'] < 3:
+        raise RuntimeError('Video active; close the existing stream before remote mode')
+    result = subprocess.run(
+        ['journalctl', '-q', *journal_args(UNIT, SETTINGS.sunshine_scope, invocation),
+         '-o', 'cat', '-g', 'CLIENT (DIS)?CONNECTED|Sunshine version:'],
+        text=True, capture_output=True, timeout=3, check=False,
+    )
+    if result.stderr or (result.returncode and not (result.returncode == 1 and not result.stdout)):
+        raise RuntimeError('Cannot verify existing streams; remote mode refused')
+    active = 0
+    for line in result.stdout.splitlines():
+        if 'Sunshine version:' in line:
+            active = 0
+        elif line.endswith('Info: CLIENT CONNECTED'):
+            active += 1
+        elif line.endswith('Info: CLIENT DISCONNECTED'):
+            active = max(0, active - 1)
+    if active:
+        raise RuntimeError('Another client is connected; remote topology change refused')
+
+
+def prepare(remote=False):
     connector = RESERVE
     if not connector:
         raise ValueError("Configure reserve_connector before preparing a session")
     with lease_lock():
         if CAPTURE_RESTART.exists():
             raise RuntimeError('Capture reconciliation pending; retry shortly')
+        if remote:
+            invocation = invocation_id()
+            if not invocation:
+                raise RuntimeError('Sunshine is not running')
+            require_remote_idle(invocation)
+            width = int(os.environ.get('SUNSHINE_CLIENT_WIDTH', 0))
+            height = int(os.environ.get('SUNSHINE_CLIENT_HEIGHT', 0))
+            fps = int(os.environ.get('SUNSHINE_CLIENT_FPS', 60))
+            if not (0 < width <= 16384 and 0 < height <= 16384 and 0 < fps <= 240):
+                raise ValueError('Remote profile requires valid client dimensions and FPS')
         previous_record = read_lease()
         if previous_record:
             if lease_alive(previous_record):
                 raise RuntimeError('A display session is already active; close it before opening another')
             if not restore(previous_record.get('token'), locked=True):
                 raise RuntimeError('Display recovery is pending; retry shortly')
-        invocation = invocation_id()
-        if not invocation:
-            raise RuntimeError('Configured Sunshine service is not running')
+        if not remote:
+            invocation = invocation_id()
+            if not invocation:
+                raise RuntimeError('Configured Sunshine service is not running')
         record = {'started': time.time(), 'started_monotonic': time.monotonic(),
                   'invocation': invocation, 'token': uuid.uuid4().hex, 'video_port': SETTINGS.video_port}
         atomic_json(LEASE, record)
         try:
             display = Display()
-            if exclusive_output(display.layout, connector):
+            if remote:
+                previous = display.mode(connector)
+                target = display.mode(connector, (width, height), min(fps, 240))
+                record.update(connector=connector, previous=previous, target=target,
+                              previous_layout=display.layout, remote_exclusive=True)
+                atomic_json(LEASE, record)
+                display.only(connector, target)
+                confirmed = Display()
+                if not (exclusive_output(confirmed.layout, connector) and
+                        confirmed.layout[0][-1][0][1] == target):
+                    raise ValueError('Exclusive reserve activation was not confirmed')
+                confirmed.power(enable=True)
+                print(f'Sunshine remote-only {connector}: requested {width}x{height}, selected {target}', flush=True)
+            elif exclusive_output(display.layout, connector):
                 width = int(os.environ.get('SUNSHINE_CLIENT_WIDTH', 0))
                 height = int(os.environ.get('SUNSHINE_CLIENT_HEIGHT', 0))
                 fps = int(os.environ.get('SUNSHINE_CLIENT_FPS', 60))
                 if width > 0 and height > 0:
-                    previous = display.layout[0][-1][0][1]
-                    if width>16384 or height>16384:
+                    if width > 16384 or height > 16384:
                         raise ValueError('Client dimensions exceed the supported 16K bound')
+                    previous = display.layout[0][-1][0][1]
                     target = display.mode(connector, (width, height), min(max(fps, 1), 240))
                     # Persist rollback before the mutation, including a full mirror layout.
                     record.update(connector=connector, previous=previous, target=target,
@@ -259,8 +315,10 @@ def prepare():
                         display.only(connector, target)
                     print(f'Sunshine display {connector}: requested {width}x{height}, selected {target}', flush=True)
         except (GLib.Error, KeyError, ValueError, IndexError, StopIteration) as error:
+            if remote:
+                restore(record['token'], locked=True)
+                raise
             print(f'Sunshine display preparation skipped: {error}', file=sys.stderr)
-
 
 def restore(token=None, locked=False):
     if not locked:
@@ -376,4 +434,4 @@ def session():
 if __name__ == "__main__":
     require_host()
     init_paths()
-    {"prepare": prepare, "restore": restore, "session": session}[sys.argv[1]]()
+    {"prepare": prepare, "prepare-remote": lambda: prepare(remote=True), "restore": restore, "session": session}[sys.argv[1]]()

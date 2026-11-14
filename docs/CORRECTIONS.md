@@ -6,6 +6,7 @@ belong in local configuration; deployment-specific values are not published.
 
 | Failure class | Included correction | Regression evidence |
 | --- | --- | --- |
+| Phone captures one physical screen while the desktop/pointer extends to another | Optional exclusive-reserve app snapshots all logical groups, selects the configured virtual output alone and restores conditionally. Default layout-preserving apps remain unchanged. | `test_remote_desktop.py`, `test_generic.py`; [profile and limits](EXCLUSIVE-RESERVE.md) |
 | Fixed-layout Mutter backend rejects otherwise valid topology | Send `layout-mode` only when `supports-changing-layout-mode` is advertised; retain current mode for normalization. | `test_display_contract.py`; real isolated GNOME/X11 end-to-end campaign in [validation](VALIDATION.md#isolated-generic-controller-end-to-end-follow-up) |
 | Mirror group mistaken for an exclusive reserve | Exclusivity requires one logical group with one member; preserve remaining mirror members and newer manual layouts. | `test_sunshine_regressions.py`, `test_sunshine_layout.py` |
 | Session ownership checked outside the mutation transaction | Policy, hooks, asynchronous primary sync and restart retries share a reentrant lock. Active lease/video defers sync before writes; one retry timer preserves forced refresh. | `test_sunshine_regressions.py`, `test_sunshine_observer_update.py` |

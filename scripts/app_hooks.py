@@ -13,14 +13,15 @@ from sunshine_layout import atomic_json
 PROGRAM='/usr/bin/python3 /usr/local/lib/sunshine-display-guard/current/sunshine_session_display.py'
 
 
-def application(name):
+def application(name, exclusive_reserve=False):
     if not name or len(name)>128 or any(ord(c)<32 for c in name):raise ValueError('Invalid app name')
+    prepare_command = 'prepare-remote' if exclusive_reserve else 'prepare'
     return {'name':name,'cmd':PROGRAM+' session','auto-detach':False,'wait-all':False,
-            'prep-cmd':[{'do':PROGRAM+' prepare','undo':''}]}
+            'prep-cmd':[{'do':PROGRAM+' '+prepare_command,'undo':''}]}
 
 
-def update(path,name,apply=False):
-    path=Path(path).expanduser();entry=application(name)
+def update(path,name,apply=False,exclusive_reserve=False):
+    path=Path(path).expanduser();entry=application(name,exclusive_reserve)
     if not apply:return {'app':entry,'writes_files':False}
     init_paths()
     with (runtime_dir()/'apps.lock').open('a') as lock:
@@ -54,7 +55,9 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--apps-file',default='~/.config/sunshine/apps.json')
     p.add_argument('--name',default='Desktop (Display Guard)');p.add_argument('--apply',action='store_true')
-    args=p.parse_args();print(json.dumps(update(args.apps_file,args.name,args.apply),indent=2))
+    p.add_argument('--exclusive-reserve',action='store_true',
+                   help='Temporarily use only the prepared virtual display; restore the prior layout on exit')
+    args=p.parse_args();print(json.dumps(update(args.apps_file,args.name,args.apply,args.exclusive_reserve),indent=2))
 
 
 if __name__=='__main__':
